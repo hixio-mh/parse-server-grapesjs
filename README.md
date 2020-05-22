@@ -7,6 +7,21 @@
 
 ```
     var app = process.app = express()
+	const cfg = {
+		engine: {'memory': { count: 1000}}, 
+		databaseURI: DatabaseURI,
+		appId: AppId,
+		restAPIKey: RestAPIKey,
+		fileKey: MyFileKey,
+		javascriptKey: process.env.KEY_JS || 'test',
+
+		....
+
+		port: PORT, 
+		options: { 
+			filesSubDirectory: 'data/files' , 
+		}
+	}
     
 +++  require('parse-server-grapesjs')({
 +++     path:'/design'
