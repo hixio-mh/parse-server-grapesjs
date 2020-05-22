@@ -1,0 +1,29 @@
+{
+  "name": "parse-server-grapesjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "grapesjs": "^0.15.10",
+    "grapesjs-custom-code": "^0.1.2",
+    "grapesjs-lory-slider": "^0.1.5",
+    "grapesjs-navbar": "^0.1.5",
+    "grapesjs-preset-webpage": "^0.1.11",
+    "grapesjs-tabs": "^0.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coderofsalvation/parse-server-grapesjs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/coderofsalvation/parse-server-grapesjs/issues"
+  },
+  "homepage": "https://github.com/coderofsalvation/parse-server-grapesjs#readme"
+}
