@@ -27,8 +27,8 @@
     
 +++ require('parse-server-grapesjs')({
 +++ 	[cfg],                       // multiple apps! 
-+++ 	parse, 
 +++ 	app,  
++++ 	Parse: require('parse/node'), 
 +++ 	express: require('express')
 +++ })
     ...
@@ -66,6 +66,11 @@ now pass the extra init option:
 
          ...
 ```
+
+## Important 
+
+By default there are no permissions installed (anyone can create/read/delete templates).
+Make sure you setup Class-based permissions for the `Template`-class to restrict this.
 
 ### Thoughts / future 
 
