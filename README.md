@@ -34,7 +34,7 @@
     ...
 ```
 
-> Profit! now surf to 'http://localhost:8081/design' e.g.
+> Profit! now surf to 'http://localhost:8081/design/{appId}' 
 
 It will automatically create a `Template`-parseClass and save templates to it.<br>
 This plugin is (intentionally) not writing HTML-files to a public folder.
@@ -44,7 +44,7 @@ This makes it usable for many types of parse setups:
 * save to database and fetch from a github/gitlab CI-worker to host it on a GH/GL page.
 * save to database and run a Parse-JOB or webhook whenever a template is updated
 
-## I want to run a different / my patched version of the grapesjs
+## I want to run a different url / grapesjs-version of the grapesjs
 
 You can use the shipped version as a starting-point:
 
