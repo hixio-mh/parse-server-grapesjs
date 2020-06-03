@@ -1,5 +1,5 @@
-![](https://github.com/coderofsalvation/parse-server-grapesjs/raw/master/demo.gif)
 
+![](https://github.com/coderofsalvation/parse-server-grapesjs/raw/master/demo.gif)
 
 > WARNING: beta
 
@@ -25,7 +25,7 @@
 		}
 	}
     
-+++ require('./../index')({
++++ require('parse-server-grapesjs')({
 +++ 	[cfg],                       // multiple apps! 
 +++ 	parse, 
 +++ 	app,  
