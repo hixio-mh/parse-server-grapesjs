@@ -1,9 +1,9 @@
 var express = require('express')
 var path = require('path')
 const {ParseServer,logger} = require('parse-server')
-var ParseDashboard = require('parse-dashboard')
-var Parse = require('parse')
+var Parse = require('parse/node')
 var fs = require('fs')
+
 
 var id = process.env.APP || 'test'
 var PORT = process.env.PORT   || 8081
@@ -15,8 +15,6 @@ var AppId=id
 var MyFileKey=process.env.FILEKEY || "myFileKey"
 var RestAPIKey= process.env.RESTAPIKEY || "restAPIKey"
 var AppName=id
-var ParseUser= process.env.ADMIN_USER || "admin"
-var ParsePassword= process.env.ADMIN_PW || "admin"
 var allowInsecureHTTP = true
 var runtests = process.env.RUNTESTS
 
@@ -39,38 +37,28 @@ const cfg = {
         module: 'parse-server-fs-store-adapter',
     }, 
 	options: { 
-		filesSubDirectory: 'data/files' , 
-		grapesJSDir: 'data/files/grapesjs'
+		filesSubDirectory: 'data/files/'+AppId
 	}
 }
 
 var apps     = [cfg]
 var parse    = new ParseServer(cfg)
 
-var parseDashboardSettings = {
-    "apps": apps, 
-    "users": [
-		{
-        	"user": ParseUser,
-        	"pass": ParsePassword,
-        	"masterKey": MasterKey,
-        	"apps": [{
-            	"appId": AppId
-        	}] 
-    	},
-	],
-    trustProxy:1
-}
-
-var dashboard = new ParseDashboard(parseDashboardSettings, allowInsecureHTTP)
-
 var app = process.app = express()
 
-require('parse-server-grapesjs')({
-	cfg, 
+require('./../index')({
+	apps, 
 	parse, 
 	app,  
 	express: require('express'), 
+	public_html:   __dirname+'/html' 
+	/*
+	path:         '/design', 
+	grapesjs_html: __dirname+'/html/mygrapesjs', 
+	onList: (req, res) => {
+		console.dir(req.body)
+		res.send('{"save":true}').end()
+	},  
 	onSave: (req, res) => {
 		console.dir(req.body)
 		res.send('{"save":true}').end()
@@ -79,18 +67,27 @@ require('parse-server-grapesjs')({
 		console.dir(req.body)
 		res.send('{"load":true}').end()
 	}
+	*/
 })
 
 // make the Parse Server available at /${appname}
 app.use('/api',     parse)
 
-// make the Parse Dashboard available at /dashboard
-app.use('/admin', dashboard)
-
 app.use(express.static(path.join(process.cwd(), '/public')))
 
 var httpServer = require('http').createServer(app)
 httpServer.listen(PORT, undefined, undefined, () => {
-  console.log("admin login/pw: admin/admin")
-  console.log("=> listening at "+HOST+":"+PORT+"/")
+	console.log("admin login/pw: admin/admin")
+	console.log("=> listening at "+HOST+":"+PORT+"/")
+
+	Parse.initialize( cfg.appId,  cfg.javascriptKey )
+	// create first user 
+	var user = new Parse.User();
+	user.set("username",  "test");
+	user.set("password",  "test");
+	user.set("email",  "your@email.com")
+	user.signUp()
+	.then( () => console.log("test user created: login/pw: your@email.com/test") )
+	.catch( (err) => console.log(err) )
+
 })

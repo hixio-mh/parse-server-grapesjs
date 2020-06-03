@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@truenorthtechnology/grapesjs-code-editor": "^0.1.7",
     "body-parser": "^1.19.0",
+    "glob": "^7.1.6",
     "grapesjs": "^0.15.10",
     "grapesjs-custom-code": "^0.1.2",
     "grapesjs-lory-slider": "^0.1.5",

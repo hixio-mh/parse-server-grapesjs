@@ -1,4 +1,7 @@
+
 ![](https://github.com/coderofsalvation/parse-server-grapesjs/raw/master/demo.gif)
+
+> WARNING: beta
 
 # Usage
 
@@ -8,7 +11,6 @@
 ```
     var app = process.app = express()
 	const cfg = {
-		engine: {'memory': { count: 1000}}, 
 		databaseURI: DatabaseURI,
 		appId: AppId,
 		restAPIKey: RestAPIKey,
@@ -23,28 +25,23 @@
 		}
 	}
     
-+++  require('parse-server-grapesjs')({
-+++     path:'/design'
-+++ 	cfg, 
++++ require('./../index')({
++++ 	[cfg],                       // multiple apps! 
 +++ 	parse, 
 +++ 	app,  
-+++ 	express: require('express'), 
-+++ 	onSave: (req, res) => {
-+++ 		console.dir(req.body)
-+++ 		res.send('{"save":true}').end()
-+++ 	}, 
-+++ 	onLoad: (req, res) => {
-+++ 		console.dir(req.body)
-+++ 		res.send('{"load":true}').end()
-+++ 	}
++++ 	express: require('express')
 +++ })
-    
     ...
 ```
 
 > Profit! now surf to 'http://localhost:8081/design' e.g.
 
-saving/loading has intentionally left up to you. This makes it usable for many types of parse setups (save to file, db,  both?).
+It will automatically create a `Template`-parseClass and save templates to it.<br>
+This plugin is (intentionally) not writing HTML-files to a public folder.
+This makes it usable for many types of parse setups:
+
+* save to database and/or html-file (to host frontend on the parse-server)
+* save to database and fetch from a github/gitlab CI-worker to host it on a GH/GL page.
 
 ## I want to run my patched version of grapesjs
 
@@ -64,14 +61,12 @@ now pass the extra init option:
 +++  require('parse-server-grapesjs')({
 +++    ...
 !!!      path: '/myeditor', 
-!!!      public_html: '/myhtml',
-!!!      public_html_node_modules: __dirname+'/node_modules'
-+++    ...
-+++ })
-    
-    ...
+!!!    	 grapesjs_html: __dirname+'/myhtml', 
+
+         ...
 ```
 
 ### Thoughts / future 
 
-* push to github/bitbucket/gitlab page
+If you're using a multiple-parse-app-in-one-setup, I think you definately want to setup gitlab/github pages, and have CI fetch the templates (and write them as .html-files).
+Just think about it, the Parse Javascript-API is so flexible, hosting the HTML elsewhere is much better serverload / bandwidth wise.

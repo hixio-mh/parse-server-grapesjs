@@ -8,6 +8,7 @@
     <script src="//feather.aviary.com/imaging/v3/editor.js"></script>
     <script src="https://static.filestackapi.com/v3/filestack-0.1.10.js"></script>
     <script src="https://unpkg.com/grapesjs"></script>
+    <script src="https://unpkg.com/parse@2.13.0/dist/parse.min.js"></script>
     <script src="node_modules/grapesjs-preset-webpage/dist/grapesjs-preset-webpage.min.js"></script>
     <script src="node_modules/grapesjs-navbar/dist/grapesjs-navbar.min.js"></script>
     <script src="node_modules/grapesjs-tabs/dist/grapesjs-tabs.min.js"></script>
@@ -20,6 +21,50 @@
         height: 100%;
         margin: 0;
       }
+	  .gjs-pn-views-container,
+	  .gjs-pn-views{
+		  min-width:220px;
+	  }
+	  a.template{
+		cursor:pointer;
+		text-decoration:none;
+		color:#AAA;
+		line-height:30px;
+	    position:relative;
+		display:block;
+		z-index:100;
+	  }
+	  .gjs-one-bg {
+		background: #333 !important;
+	  }
+	  .gjs-two-color{
+		color:#CCC !important;
+	  }
+	  input.login, 
+	  input.password{
+		display:block;
+		margin-bottom:20px;
+		padding: 10px;
+		border-radius: 3px;
+		border: none;
+		font-size: 15px;
+	  }
+	  .loginbox{
+		padding:20px;
+		width:300px;
+		margin:0 auto;
+	  }
+	  .fileBrowser {
+		max-height:50%;
+		overflow: hidden;
+		overflow-y: auto;
+	  }
+	  a.delete{
+		position:absolute;
+		z-index:200;
+		top:-7px;
+		right:0;
+	  }
     </style>
   </head>
   <body>
@@ -823,6 +868,8 @@
 
 
     <script type="text/javascript">
+	  Parse.initialize('', '') // don't change this, it is replaced by the server based on the url
+
       var editor = grapesjs.init({
         height: '100%',
         showOffsets: 1,
@@ -860,36 +907,179 @@
         attributes: { title: 'Open Code'},
       });
 
-	editor.on('storage:start', () => console.log("loading") )
-	editor.on('storage:stop', () => console.log("loaded") )
-	editor.on('storage:error', (err) => console.log("storage error: "+err) )
+	  editor.Panels.addButton('options',{
+        id: 'open-file',
+        className: 'fa fa-folder-open', 
+        //label: 'load template',
+        command: 'open-file',
+        attributes: { title: 'Open File'}
+      });
+	  editor.StorageManager.add('remote', {
+		  store: async (data,  clb,  clbErr) => {
+			  var file = data[0] || editor.currentFile
+			  var o = new Parse.Object("Template")
+			  var existing = await new Parse.Query("Template").equalTo('file', file).find()
+			  if( existing.length ) o = existing[0]
+			  o.set('file', file )
+			  o.set('data', {
+				'gjs-html': editor.getHtml(), 
+				'gjs-js':   editor.getJs(), 
+				'gjs-css':  editor.getCss()
+			  })
+			  await o.save()
+			  alert("saved!")
+			  editor.Modal.close()
+		  }, 
 
-	editor.Panels.addButton('options',
-        [{
-          id: 'save-db',
-          className: 'fa fa-floppy-o',
-          command: 'save-db',
-          attributes: {title: 'Save DB'}
-        }]
-    );
+		  load: async (keys,  clb,  clbErr) => {
+			  try {
+				var file = editor.currentFile = keys[0]
+			  	var o = await new Parse.Query("Template").equalTo('file', file).find()
+				if( o.length == 0 ) throw 'not found'
+			    console.dir(o[0].get('data'))
+				var data = o[0].get('data')
+				clb( data )
+				editor.setStyle( data['gjs-css'] )
+				editor.setComponents( data['gjs-html'] )
+				editor.Modal.close()
+			  } catch (e) {
+			    alert(e)
+			  }
+		  } 
+	  })
 
-    editor.Commands.add('save-db', {
-        run: function(editor, sender)
-        {
-          sender && sender.set('active', 0); // turn off the button
-          editor.store();
-
-          var htmldata = editor.getHtml();
-          var cssdata = editor.getCss();
-          console.log(htmldata);
-          console.log(cssdata);
-          $.post("templates/template",
+	  editor.Commands.add('open-file', {
+          run: function(editor, sender)
           {
-            html: htmldata,
-            css: cssdata
-          });
-        }
-    });
-    </script>
+			editor.Modal.close()
+
+			var loadFile = (file) => {
+				if( !confirm("are you sure you want to load "+file+" ?") ) return
+				var storage = editor.StorageManager.getStorages().remote 
+				storage.load([file], es => {
+					console.log("file loaded: "+file)
+				})
+			}
+
+			new Parse.Query("Template").find()
+			.then( (templates) => {
+				console.dir(templates)
+				var content = document.createElement("div")
+				content.className = "fileBrowser"
+				templates.map( async (template) => {
+					var a = document.createElement("a")
+					a.onclick = loadFile.bind(this, template.get('file') )
+					a.innerHTML = "<i class='fa fa-file'></i>&nbsp;&nbsp;&nbsp;"+ template.get('file') +'<br>'
+					a.href      = "#"
+					a.className = "template"
+					var $delete = document.createElement("a")
+					$delete.className = "delete"
+					$delete.innerHTML = '<i class="fa fa-trash"></i>'
+					$delete.addEventListener("click", function(file, e){
+						console.log("destroying "+file)
+						new Parse.Query("Template").equalTo('file', file).find()
+						.then( (objs) => {
+							console.dir(objs)
+							var obj  = objs[0]
+							obj.destroy()
+							.then( () => editor.Commands.run('open-file'))
+							.catch( console.error )
+						})
+						e.preventDefault()
+						return false
+					}.bind(null, template.get('file') ) )
+					a.appendChild($delete)
+					content.appendChild(a)
+				})
+				var $br      = document.createElement("br")
+				var $docname = document.createElement("input")
+				var $create  = document.createElement("button")
+				$create.className    = "gjs-btn-prim"
+				$create.innerText    = "create"
+				$docname.type        = "text"
+				$docname.placeholder = "my-new-document.html"
+				$create.addEventListener("click", () => {
+					var storage = editor.StorageManager.getStorages().remote 
+					editor.currentFile = $docname.value
+					storage.store([ editor.currentFile ], es => {
+						console.log("file stored")
+					})
+				})
+				content.appendChild($br)
+				content.appendChild($docname)
+				content.appendChild($create)
+				editor.Modal.open({
+					title:"load template",
+					content
+				})
+				resizeModal(700)
+			})
+            //sender && sender.set('active', 0); // turn off the button
+            //console.dir( $.get("list") )
+          }
+      });
+
+
+	  editor.on('storage:start', () => console.log("loading") )
+	  editor.on('storage:stop', () => console.log("loaded") )
+	  editor.on('storage:error', (err) => console.log("storage error: "+err) )
+
+	  editor.Panels.addButton('options',
+          [{
+            id: 'save-db',
+            className: 'fa fa-floppy-o',
+            command: 'save-db',
+            attributes: {title: 'Save DB'}
+          }]
+      );
+      
+      editor.Commands.add('save-db', {
+          run: function(editor, sender)
+          {
+            sender && sender.set('active', 0); // turn off the button
+            editor.store([editor.currentFile]);
+          }
+      });
+
+	  const resizeModal = (width) => document.querySelector('.gjs-mdl-dialog').style.maxWidth=`${width}px`
+
+	  const loginUser = () => {
+		if( Parse.User.current() ) return editor.Commands.run('open-file')
+		var content     = document.createElement("div")
+		var $login   = document.createElement("input")
+		var $lpass   = document.createElement("input")
+		var $br      = document.createElement("br")
+		var $status  = document.createElement("div")
+		var $submi   = document.createElement("button")
+		content.className = "loginbox"
+		$login.type       = "text"
+		$login.placeholder= "your@email.com"
+		$login.className  = "login"
+		$lpass.type       = "password"
+		$lpass.className  = "password"
+		$lpass.placeholder= "password"
+		$submi.innerText  = "sign in"
+		$submi.className  = "gjs-btn-prim"
+		$submi.addEventListener("click", () => {
+			Parse.User.logIn( $login.value,  $lpass.value )
+			.then( () => editor.Modal.close() )
+			.catch( (err) => $status.innerHTML = "<small><br>wrong login / password?</small>" )
+		})
+		content.appendChild($login)
+		content.appendChild($lpass)
+		content.appendChild($submi)
+		content.appendChild($br)
+		content.appendChild($status)
+		setTimeout( () => {
+			editor.Modal.open({
+				title:"please login", 
+				content
+			})
+			resizeModal(275)
+		}, 100)
+	  }
+
+	  loginUser()
+      </script>
   </body>
 </html>
