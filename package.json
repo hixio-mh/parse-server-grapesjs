@@ -1,6 +1,6 @@
 {
   "name": "parse-server-grapesjs",
-  "version": "1.0.43",
+  "version": "1.0.44",
   "description": "",
   "main": "index.js",
   "dependencies": {
@@ -11,6 +11,7 @@
     "grapesjs-custom-code": "^0.1.2",
     "grapesjs-lory-slider": "^0.1.5",
     "grapesjs-navbar": "^0.1.5",
+    "grapesjs-plugin-header": "^0.1.54",
     "grapesjs-preset-webpage": "^0.1.11",
     "grapesjs-tabs": "^0.2.2"
   },
